@@ -668,7 +668,9 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       const had = !!navigator.serviceWorker.controller;
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+      }).catch(() => {});
       let done = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } });
     });

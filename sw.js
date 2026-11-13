@@ -1,7 +1,7 @@
 /* Theory service worker: everything works offline after the first visit. */
-const VERSION = 'theory-v2';
+const VERSION = 'theory-v3';
 const SHELL = [
-  './', 'index.html', 'styles.css?v=2', 'app.js?v=2', 'manifest.webmanifest', 'data/bank.json',
+  './', 'index.html', 'styles.css?v=2', 'app.js?v=3', 'manifest.webmanifest', 'data/bank.json',
   'icons/icon-192.png?v=1', 'icons/icon-512.png?v=1', 'icons/apple-touch-icon.png?v=1',
   'fonts/inter-latin-standard-normal.woff2', 'fonts/inter-latin-ext-standard-normal.woff2', 'fonts/inter-greek-standard-normal.woff2'
 ];
@@ -37,7 +37,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
-    event.respondWith(fetch(req).then((res) => {
+    event.respondWith(fetch(req.url, { cache: 'no-store', credentials: 'same-origin' }).then((res) => {
       const copy = res.clone(); caches.open(VERSION).then((c) => c.put('index.html', copy)); return res;
     }).catch(() => caches.match('index.html')));
     return;
