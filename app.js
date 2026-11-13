@@ -12,11 +12,11 @@
   /* ---------------- strings ---------------- */
   const S = {
     en: {
-      app: 'Theory', sub: 'Greek driving theory · Category B',
+      app: 'Theory', sub: 'Driving theory · Category B',
       readiness: 'Exam readiness', mastered: '{n} of {t} questions mastered',
       answeredN: '{n} answered so far', mocksLabel: 'Last 5 mock exams', noMocks: 'No mock exams yet',
       passedOf: '{p} of {n} passed',
-      start: 'Start mock exam', startMeta: '30 questions · 35 min · max 1 mistake',
+      start: 'Start mock exam', startMeta: '30 questions · 35 min',
       resume: 'Continue your mock exam', resumeLeft: '{m} min left',
       signs: 'Signs', signsSub: '{n} sign & marking questions',
       topics: 'Topics', topicsSub: '{n} topics',
@@ -44,14 +44,14 @@
       mistakesTitle: 'Your mistakes', mistakesText: 'Every question you’ve got wrong. Get each one right twice in a row to clear it.',
       cleared: 'All cleared', clearedText: 'No mistakes left to review.',
       allTitle: 'All questions', back: 'Back', done: 'Done',
-      mins: '{m} min'
+      mins: '{m} min', kAnswered: 'Answered', kMocks: 'Mocks passed', study: 'Study', recent: 'Recent mock exams'
     },
     el: {
       app: 'Θεωρία', sub: 'Θεωρία οδήγησης · Κατηγορία Β',
       readiness: 'Ετοιμότητα', mastered: '{n} από {t} ερωτήσεις κατακτημένες',
       answeredN: '{n} απαντημένες μέχρι τώρα', mocksLabel: 'Τελευταίες 5 δοκιμαστικές', noMocks: 'Καμία δοκιμαστική ακόμα',
       passedOf: '{p} από {n} επιτυχίες',
-      start: 'Δοκιμαστική εξέταση', startMeta: '30 ερωτήσεις · 35 λεπτά · έως 1 λάθος',
+      start: 'Δοκιμαστική εξέταση', startMeta: '30 ερωτήσεις · 35 λεπτά',
       resume: 'Συνέχεια δοκιμαστικής', resumeLeft: 'απομένουν {m} λεπτά',
       signs: 'Σήματα', signsSub: '{n} ερωτήσεις σήμανσης',
       topics: 'Ενότητες', topicsSub: '{n} ενότητες',
@@ -79,7 +79,7 @@
       mistakesTitle: 'Τα λάθη σας', mistakesText: 'Όσες ερωτήσεις έχετε κάνει λάθος. Απαντήστε σωστά δύο φορές στη σειρά για να φύγουν.',
       cleared: 'Όλα καθαρά', clearedText: 'Δεν έχουν μείνει λάθη για επανάληψη.',
       allTitle: 'Όλες οι ερωτήσεις', back: 'Πίσω', done: 'Τέλος',
-      mins: '{m} λεπτά'
+      mins: '{m} λεπτά', kAnswered: 'Απαντημένες', kMocks: 'Επιτυχίες', study: 'Μελέτη', recent: 'Πρόσφατες δοκιμαστικές'
     }
   };
   let lang = store.get('lang', 'en');
@@ -178,54 +178,61 @@
     const mocks = store.get('mocks', []);
     const last5 = mocks.slice(-5);
     const pct = total ? Math.round((mastered / total) * 100) : 0;
-    const C = 2 * Math.PI * 41;
     const exam = store.get('exam', null);
     const left = exam ? Math.max(0, bank.exam.minutes * 60 - (Date.now() - exam.start) / 1000) : 0;
     const lastRes = store.get('lastResult', null);
 
+    const fmtD = (d) => new Date(d).toLocaleDateString(lang === 'el' ? 'el-GR' : 'en-GB', { day: 'numeric', month: 'short' });
+    const passed = mocks.filter((m) => m.pass).length;
     mount(`
       <header class="top">
-        <div class="brand"><span class="mark">${I.car}</span><h1>${esc(t('app'))}</h1></div>
+        <span class="eyebrow">${esc(t('sub'))}</span>
         ${langSwitch()}
       </header>
+      <h1 class="title">${esc(t('app'))}</h1>
 
-      <section class="hero">
-        <div class="row">
-          <div class="ring">
-            <svg viewBox="0 0 92 92"><circle class="bg" cx="46" cy="46" r="41"/><circle class="fg" cx="46" cy="46" r="41" stroke-dasharray="${C}" stroke-dashoffset="${C}" id="ringfg"/></svg>
-            <div class="val">${pct}<small>%</small></div>
-          </div>
-          <div>
-            <h2>${esc(t('readiness'))}</h2>
-            <p>${esc(t('mastered', { n: mastered, t: total }))}</p>
-            <p class="small" style="margin-top:2px">${esc(t('answeredN', { n: seen }))}</p>
-          </div>
+      <section class="ready">
+        <div class="ready-row">
+          <div class="bignum num">${pct}<span>%</span></div>
+          <div class="cap">${esc(t('readiness'))}<br><span class="muted">${esc(t('mastered', { n: mastered, t: total }))}</span></div>
         </div>
-        <div class="mocks">${[0, 1, 2, 3, 4].map((i) => { const m = last5[i]; return `<i class="${m ? (m.pass ? 'p' : 'f') : ''}"></i>`; }).join('')}</div>
-        <div class="mocks-label"><span>${esc(t('mocksLabel'))}</span><span>${last5.length ? esc(t('passedOf', { p: last5.filter((m) => m.pass).length, n: last5.length })) : esc(t('noMocks'))}</span></div>
+        <div class="track"><i id="ringfg" style="width:0"></i></div>
+        <div class="kpis">
+          <div><b class="num">${seen}</b><span>${esc(t('kAnswered'))}</span></div>
+          <div><b class="num">${mistakes}</b><span>${esc(t('mistakes'))}</span></div>
+          <div><b class="num">${passed}<em>/${mocks.length}</em></b><span>${esc(t('kMocks'))}</span></div>
+        </div>
       </section>
 
-      ${exam && left > 0 ? `<button class="resume" id="resume"><span>${esc(t('resume'))}</span><span class="muted num">${esc(t('resumeLeft', { m: Math.ceil(left / 60) }))}</span></button>` : ''}
+      ${exam && left > 0 ? `<button class="resume" id="resume"><span>${esc(t('resume'))}</span><span class="num">${mmss(left)}</span></button>` : ''}
 
-      <button class="cta" id="start">
-        <div><b>${esc(t('start'))}</b><span>${esc(t('startMeta'))}</span></div>
-        <span class="go">${I.arrow}</span>
+      <button class="primary" id="start">
+        <span class="pt">${esc(t('start'))}</span>
+        <span class="pm">${esc(t('startMeta'))}</span>
       </button>
 
-      <div class="tiles">
-        <a class="tile" href="#/signs"><span class="ic y">${I.sign}</span><div><b>${esc(t('signs'))}</b><span>${esc(t('signsSub', { n: signN }))}</span></div></a>
-        <a class="tile" href="#/topics"><span class="ic b">${I.list}</span><div><b>${esc(t('topics'))}</b><span>${esc(t('topicsSub', { n: bank.topics.length }))}</span></div></a>
-        <a class="tile" href="#/practice/mistakes"><span class="ic r">${I.redo}</span><div><b>${esc(t('mistakes'))}</b><span>${mistakes ? esc(t('mistakesSub', { n: mistakes })) : esc(t('mistakesNone'))}</span></div></a>
-        <a class="tile" href="#/practice/all"><span class="ic g">${I.stack}</span><div><b>${esc(t('all'))}</b><span>${esc(t('allSub', { n: total }))}</span></div></a>
-        ${lastRes ? `<a class="tile wide" href="#/result"><span class="ic ${lastRes.pass ? 'g' : 'r'}">${lastRes.pass ? I.check : I.x}</span><div style="flex:1"><b>${esc(t('lastMock'))}: ${lastRes.score}/30</b><span>${esc(lastRes.pass ? t('pass') : t('fail'))} · ${esc(new Date(lastRes.d).toLocaleDateString(lang === 'el' ? 'el-GR' : 'en-GB', { day: 'numeric', month: 'short' }))}</span></div>${I.chev}</a>` : ''}
-      </div>
+      <div class="sect">${esc(t('study'))}</div>
+      <nav class="rows">
+        <a class="row" href="#/signs"><span class="ix">01</span><span class="rt">${esc(t('signsTitle'))}</span><span class="rm num">${signN}</span>${I.chev}</a>
+        <a class="row" href="#/topics"><span class="ix">02</span><span class="rt">${esc(t('topicsTitle'))}</span><span class="rm num">${bank.topics.length}</span>${I.chev}</a>
+        <a class="row" href="#/practice/mistakes"><span class="ix">03</span><span class="rt">${esc(t('mistakesTitle'))}</span><span class="rm num${mistakes ? ' hot' : ''}">${mistakes}</span>${I.chev}</a>
+        <a class="row" href="#/practice/all"><span class="ix">04</span><span class="rt">${esc(t('all'))}</span><span class="rm num">${total}</span>${I.chev}</a>
+      </nav>
+
+      <div class="sect">${esc(t('recent'))}</div>
+      ${last5.length ? `<nav class="rows">${last5.slice().reverse().map((m, k) => `
+        <a class="row" ${k === 0 && lastRes ? 'href="#/result"' : ''}>
+          <span class="rt">${esc(fmtD(m.d))}</span>
+          <span class="rm num">${m.score}/30</span>
+          <span class="pill ${m.pass ? 'p' : 'f'}">${esc(m.pass ? t('pass') : t('fail'))}</span>
+        </a>`).join('')}</nav>` : `<p class="muted small" style="margin:0">${esc(t('noMocks'))}</p>`}
 
       <p class="foot">${esc(t('foot'))}</p>
     `);
     bindLang();
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const fg = document.getElementById('ringfg');
-      if (fg) fg.style.strokeDashoffset = String(C * (1 - pct / 100));
+      if (fg) fg.style.width = pct + '%';
     }));
     document.getElementById('start').onclick = () => {
       if (exam && left > 0) {
@@ -347,7 +354,7 @@
     const ex = store.get('exam', null); if (!ex) return;
     openSheet(`
       <h3>${esc(t('grid'))}</h3>
-      <div class="legend"><span><i style="background:var(--sel-bg);border:1px solid rgba(59,130,246,.5)"></i>${esc(t('answered'))}</span><span><i style="border:1.5px solid var(--accent)"></i>${esc(t('current'))}</span></div>
+      <div class="legend"><span><i style="background:var(--s3)"></i>${esc(t('answered'))}</span><span><i style="border:1px solid var(--text)"></i>${esc(t('current'))}</span></div>
       <div class="qgrid">${ex.ids.map((_, k) => `<button data-k="${k}" class="${ex.ans[k] != null ? 'done' : ''} ${k === ex.cur ? 'cur' : ''}">${k + 1}</button>`).join('')}</div>
       <button class="btn accent" id="gfin" style="width:100%">${esc(t('finish'))}</button>
     `);

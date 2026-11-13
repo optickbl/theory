@@ -1,7 +1,7 @@
 /* Theory service worker: everything works offline after the first visit. */
-const VERSION = 'theory-v1';
+const VERSION = 'theory-v2';
 const SHELL = [
-  './', 'index.html', 'styles.css?v=1', 'app.js?v=1', 'manifest.webmanifest', 'data/bank.json',
+  './', 'index.html', 'styles.css?v=2', 'app.js?v=2', 'manifest.webmanifest', 'data/bank.json',
   'icons/icon-192.png?v=1', 'icons/icon-512.png?v=1', 'icons/apple-touch-icon.png?v=1',
   'fonts/inter-latin-standard-normal.woff2', 'fonts/inter-latin-ext-standard-normal.woff2', 'fonts/inter-greek-standard-normal.woff2'
 ];
