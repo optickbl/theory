@@ -44,7 +44,7 @@
       mistakesTitle: 'Your mistakes', mistakesText: 'Every question you’ve got wrong. Get each one right twice in a row to clear it.',
       cleared: 'All cleared', clearedText: 'No mistakes left to review.',
       allTitle: 'All questions', back: 'Back', done: 'Done',
-      mins: '{m} min', kAnswered: 'Answered', kMocks: 'Mocks passed', study: 'Study', recent: 'Recent mock exams'
+      mins: '{m} min', kAnswered: 'Answered', kMocks: 'Mocks passed', study: 'Study', recent: 'Recent mock exams', readyShort: 'ready', kMastered: 'Mastered', reviewLast: 'Review last exam'
     },
     el: {
       app: 'Θεωρία', sub: 'Θεωρία οδήγησης · Κατηγορία Β',
@@ -79,7 +79,7 @@
       mistakesTitle: 'Τα λάθη σας', mistakesText: 'Όσες ερωτήσεις έχετε κάνει λάθος. Απαντήστε σωστά δύο φορές στη σειρά για να φύγουν.',
       cleared: 'Όλα καθαρά', clearedText: 'Δεν έχουν μείνει λάθη για επανάληψη.',
       allTitle: 'Όλες οι ερωτήσεις', back: 'Πίσω', done: 'Τέλος',
-      mins: '{m} λεπτά', kAnswered: 'Απαντημένες', kMocks: 'Επιτυχίες', study: 'Μελέτη', recent: 'Πρόσφατες δοκιμαστικές'
+      mins: '{m} λεπτά', kAnswered: 'Απαντημένες', kMocks: 'Επιτυχίες', study: 'Μελέτη', recent: 'Πρόσφατες δοκιμαστικές', readyShort: 'έτοιμος', kMastered: 'Κατακτημένες', reviewLast: 'Δείτε την τελευταία'
     }
   };
   let lang = store.get('lang', 'en');
@@ -189,50 +189,45 @@
         <span class="eyebrow">${esc(t('sub'))}</span>
         ${langSwitch()}
       </header>
-      <h1 class="title">${esc(t('app'))}</h1>
+      <h1 class="title">${esc(t('app'))}<span class="dotmark"></span></h1>
 
-      <section class="ready">
-        <div class="ready-row">
-          <div class="bignum num">${pct}<span>%</span></div>
-          <div class="cap">${esc(t('readiness'))}<br><span class="muted">${esc(t('mastered', { n: mastered, t: total }))}</span></div>
+      <section class="hero">
+        <div class="ring">
+          <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="ringfg" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/></svg>
+          <div class="val"><b class="num">${pct}<small>%</small></b><span>${esc(t('readyShort'))}</span></div>
         </div>
-        <div class="track"><i id="ringfg" style="width:0"></i></div>
-        <div class="kpis">
-          <div><b class="num">${seen}</b><span>${esc(t('kAnswered'))}</span></div>
-          <div><b class="num">${mistakes}</b><span>${esc(t('mistakes'))}</span></div>
-          <div><b class="num">${passed}<em>/${mocks.length}</em></b><span>${esc(t('kMocks'))}</span></div>
+        <div class="hero-side">
+          <div class="hs"><b class="num">${mastered}<em>/${total}</em></b><span>${esc(t('kMastered'))}</span></div>
+          <div class="hs"><b class="num">${seen}</b><span>${esc(t('kAnswered'))}</span></div>
+          <div class="hs"><b class="num">${passed}<em>/${mocks.length}</em></b><span>${esc(t('kMocks'))}</span></div>
         </div>
       </section>
 
       ${exam && left > 0 ? `<button class="resume" id="resume"><span>${esc(t('resume'))}</span><span class="num">${mmss(left)}</span></button>` : ''}
 
       <button class="primary" id="start">
-        <span class="pt">${esc(t('start'))}</span>
-        <span class="pm">${esc(t('startMeta'))}</span>
+        <span><span class="pt">${esc(t('start'))}</span><span class="pm">${esc(t('startMeta'))}</span></span>
+        <span class="go">${I.arrow}</span>
       </button>
 
       <div class="sect">${esc(t('study'))}</div>
-      <nav class="rows">
-        <a class="row" href="#/signs"><span class="ix">01</span><span class="rt">${esc(t('signsTitle'))}</span><span class="rm num">${signN}</span>${I.chev}</a>
-        <a class="row" href="#/topics"><span class="ix">02</span><span class="rt">${esc(t('topicsTitle'))}</span><span class="rm num">${bank.topics.length}</span>${I.chev}</a>
-        <a class="row" href="#/practice/mistakes"><span class="ix">03</span><span class="rt">${esc(t('mistakesTitle'))}</span><span class="rm num${mistakes ? ' hot' : ''}">${mistakes}</span>${I.chev}</a>
-        <a class="row" href="#/practice/all"><span class="ix">04</span><span class="rt">${esc(t('all'))}</span><span class="rm num">${total}</span>${I.chev}</a>
+      <nav class="cards">
+        <a class="sc" href="#/signs"><span class="thumb"><img src="img/c001.jpg" alt=""></span><b>${esc(t('signs'))}</b><span>${esc(t('signsSub', { n: signN }))}</span></a>
+        <a class="sc" href="#/topics"><span class="thumb"><img src="img/c020.jpg" alt=""></span><b>${esc(t('topics'))}</b><span>${esc(t('topicsSub', { n: bank.topics.length }))}</span></a>
+        <a class="sc" href="#/practice/mistakes"><span class="thumb"><img src="img/c021.jpg" alt=""></span><b>${esc(t('mistakes'))}${mistakes ? ` <em class="hot num">${mistakes}</em>` : ''}</b><span>${mistakes ? esc(t('mistakesSub', { n: mistakes })) : esc(t('mistakesNone'))}</span></a>
+        <a class="sc" href="#/practice/all"><span class="thumb"><img src="img/c029.jpg" alt=""></span><b>${esc(t('all'))}</b><span>${esc(t('allSub', { n: total }))}</span></a>
       </nav>
 
       <div class="sect">${esc(t('recent'))}</div>
-      ${last5.length ? `<nav class="rows">${last5.slice().reverse().map((m, k) => `
-        <a class="row" ${k === 0 && lastRes ? 'href="#/result"' : ''}>
-          <span class="rt">${esc(fmtD(m.d))}</span>
-          <span class="rm num">${m.score}/30</span>
-          <span class="pill ${m.pass ? 'p' : 'f'}">${esc(m.pass ? t('pass') : t('fail'))}</span>
-        </a>`).join('')}</nav>` : `<p class="muted small" style="margin:0">${esc(t('noMocks'))}</p>`}
+      ${last5.length ? `<div class="mockbars">${last5.map((m) => `<div class="mb ${m.pass ? 'p' : 'f'}"><i style="height:${Math.max(8, (m.score / 30) * 100)}%"></i><b class="num">${m.score}</b><span>${esc(fmtD(m.d))}</span></div>`).join('')}</div>
+        ${lastRes ? `<a class="lastlink" href="#/result">${esc(t('reviewLast'))} ${I.chev}</a>` : ''}` : `<p class="muted small" style="margin:0">${esc(t('noMocks'))}</p>`}
 
       <p class="foot">${esc(t('foot'))}</p>
     `);
     bindLang();
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const fg = document.getElementById('ringfg');
-      if (fg) fg.style.width = pct + '%';
+      if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - pct / 100));
     }));
     document.getElementById('start').onclick = () => {
       if (exam && left > 0) {
